@@ -18,17 +18,19 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user }) {
+      console.log('[PreShot] signIn called:', user.email)
       const db = createServiceClient()
-
-      const { data: existing } = await db
+      
+      const { data: existing, error: selectError } = await db
         .from('users')
         .select('id')
         .eq('email', user.email!)
         .single()
 
+      console.log('[PreShot] select result:', { existing, selectError })
+
       if (!existing) {
         let code = generateReferralCode()
-        // Ensure uniqueness
         let collision = true
         while (collision) {
           const { data } = await db.from('users').select('id').eq('referral_code', code).single()
@@ -36,7 +38,7 @@ export const authOptions: NextAuthOptions = {
           else code = generateReferralCode()
         }
 
-        await db.from('users').insert({
+        const { error: insertError } = await db.from('users').insert({
           email: user.email,
           name: user.name,
           avatar: user.image,
@@ -44,12 +46,8 @@ export const authOptions: NextAuthOptions = {
           referral_code: code,
           pro_months_remaining: 12,
         })
-      } else {
-        // Sync latest name/avatar from Google
-        await db
-          .from('users')
-          .update({ name: user.name, avatar: user.image })
-          .eq('email', user.email!)
+        
+        console.log('[PreShot] insert result:', { insertError })
       }
 
       return true
