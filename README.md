@@ -1,156 +1,231 @@
-# PreShot — Landing Page
+# PreShot — Landing Page & Dashboard
 
-> Savoir douter, Mieux naviguer.
-
-Extension Chrome de détection de sites frauduleux. Ce dépôt contient la landing page marketing et le dashboard utilisateur.
-
-**Stack :** Next.js 14 (App Router) · TypeScript · Tailwind CSS · NextAuth.js · Supabase
+**PreShot** est une extension Chrome qui analyse chaque site visité et détecte en temps réel les fraudes, dark patterns et tentatives de phishing. Ce dépôt contient la **landing page marketing** et le **dashboard utilisateur** associés à l'extension.
 
 ---
 
-## Structure du projet
+## Stack technique
 
-```
-src/
-├── app/
-│   ├── page.tsx                        # Landing page (/)
-│   ├── layout.tsx                      # Root layout + SessionProvider
-│   ├── globals.css                     # Tailwind + variables globales
-│   ├── api/auth/[...nextauth]/route.ts # NextAuth handler
-│   └── dashboard/
-│       ├── layout.tsx                  # Auth guard → redirect si non connecté
-│       ├── parrainage/page.tsx         # Programme de parrainage
-│       ├── historique/page.tsx         # Historique diagnostics
-│       └── profil/page.tsx             # Profil utilisateur
-├── components/
-│   ├── AuthProvider.tsx
-│   ├── Navbar.tsx
-│   ├── Hero.tsx
-│   ├── Features.tsx
-│   ├── Pricing.tsx
-│   ├── Footer.tsx
-│   └── dashboard/
-│       ├── DashboardNav.tsx
-│       ├── ReferralDashboard.tsx
-│       ├── HistoriqueDashboard.tsx
-│       └── ProfilView.tsx
-├── lib/
-│   ├── auth.ts         # NextAuth config + création utilisateur Supabase
-│   ├── supabase.ts     # Clients Supabase (public + service role)
-│   └── referral.ts     # Logique paliers de parrainage
-└── types/
-    ├── index.ts        # Types métier
-    └── next-auth.d.ts  # Augmentation Session NextAuth
-supabase/
-└── migrations/001_initial.sql  # Schéma complet + RLS + fonction validate_referral
-```
+| Technologie | Rôle |
+|---|---|
+| [Next.js 14](https://nextjs.org) (App Router) | Framework React — SSR + API Routes |
+| [NextAuth.js](https://next-auth.js.org) | Authentification Google OAuth |
+| [Supabase](https://supabase.com) | Base de données PostgreSQL + API REST |
+| [Tailwind CSS](https://tailwindcss.com) | Styles utilitaires |
+| [Vercel](https://vercel.com) | Hébergement et déploiement |
 
 ---
 
-## Installation
+## Fonctionnalités
 
-### 1. Prérequis
+### Authentification
+- Connexion via Google OAuth (NextAuth.js)
+- Création automatique du compte utilisateur dans Supabase à la première connexion
+- Session persistante via JWT
 
-- Node.js 18+
-- Un compte [Supabase](https://supabase.com)
-- Un projet Google Cloud avec OAuth 2.0 configuré
+### Dashboard utilisateur
+- **Historique des diagnostics** — liste des sites analysés par l'extension (URL, verdict, red flags, date), score de sécurité sur 30 jours, filtres, export CSV
+- **Programme de parrainage** — code unique `PRESHOT-XXXXXXXX`, paliers de récompense (Silver à 3 parrainages, Gold à 6), 1 mois Pro offert par filleul validé
+- **Profil** — informations du compte Google, abonnement actuel, mois Pro restants
 
-### 2. Cloner et installer
+### Plans
+| | Gratuit | Pro |
+|---|---|---|
+| Détection fraudes | ✓ | ✓ |
+| Historique (30 jours) | 7 jours | 30 jours |
+| Export CSV | — | ✓ |
+| Programme de parrainage | — | ✓ |
+| Support prioritaire | — | ✓ |
+| Prix | 0 € | 4,99 €/mois |
+
+### Intégration extension Chrome
+L'extension envoie ses diagnostics à `POST /api/diagnostics` après chaque analyse. Les données apparaissent immédiatement dans le dashboard de l'utilisateur connecté.
+
+---
+
+## Installation locale
 
 ```bash
-git clone <ce-repo>
+git clone https://github.com/votre-org/preshot_landing.git
 cd preshot_landing
 npm install
-```
-
-### 3. Variables d'environnement
-
-```bash
 cp .env.local.example .env.local
+# Remplir les variables d'environnement (voir section ci-dessous)
+npm run dev
 ```
 
-Remplissez `.env.local` :
+Ouvrir [http://localhost:3000](http://localhost:3000).
 
-| Variable | Où la trouver |
-|---|---|
-| `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | `http://localhost:3000` en dev |
-| `GOOGLE_CLIENT_ID` | [Google Cloud Console](https://console.cloud.google.com/) > APIs & Services > Identifiants |
-| `GOOGLE_CLIENT_SECRET` | Idem |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard > Settings > API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard > Settings > API |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard > Settings > API (service_role) |
+---
 
-### 4. Configurer Google OAuth
+## Variables d'environnement
 
-Dans [Google Cloud Console](https://console.cloud.google.com/) :
-1. Créer un projet ou utiliser un existant
-2. Activer l'API **Google+ API** ou **Google Identity**
-3. Créer des identifiants OAuth 2.0 (Application Web)
-4. Ajouter les URIs de redirection autorisées :
+Copier `.env.local.example` en `.env.local` et renseigner chaque variable :
+
+| Variable | Description | Où la trouver |
+|---|---|---|
+| `NEXTAUTH_URL` | URL publique de l'application | `http://localhost:3000` en dev, URL Vercel en prod |
+| `NEXTAUTH_SECRET` | Clé secrète pour signer les sessions | `openssl rand -base64 32` |
+| `GOOGLE_CLIENT_ID` | ID client OAuth Google | [Google Cloud Console](https://console.cloud.google.com) › APIs & Services › Identifiants |
+| `GOOGLE_CLIENT_SECRET` | Secret OAuth Google | Même page que ci-dessus |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL du projet Supabase | Supabase Dashboard › Settings › API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clé publique Supabase (anon) | Supabase Dashboard › Settings › API |
+| `SUPABASE_SERVICE_ROLE_KEY` | Clé service Supabase — **ne jamais exposer côté client** | Supabase Dashboard › Settings › API |
+
+### Configuration Google OAuth
+
+Dans [Google Cloud Console](https://console.cloud.google.com) :
+
+1. Créer un projet (ou en sélectionner un existant)
+2. Activer l'API **Google Identity** / **People API**
+3. Créer des identifiants OAuth 2.0 (type : Application Web)
+4. Ajouter les URI de redirection autorisées :
    - `http://localhost:3000/api/auth/callback/google` (dev)
-   - `https://votre-domaine.com/api/auth/callback/google` (prod)
+   - `https://votre-domaine.vercel.app/api/auth/callback/google` (prod)
 
-### 5. Créer le schéma Supabase
+---
 
-Dans **Supabase Dashboard > SQL Editor**, exécutez le contenu de :
+## Configuration Supabase
+
+Dans **Supabase Dashboard › SQL Editor**, exécuter le contenu de :
 
 ```
 supabase/migrations/001_initial.sql
 ```
 
-Ce script crée :
-- Table `users` (id, email, name, avatar, plan, referral_code, pro_months_remaining)
-- Table `referrals` (id, referrer_id, referred_id, status, reward_months)
-- Table `diagnostics` (id, user_id, url, verdict, red_flags_count, details, analyzed_at)
-- Indexes de performance
-- Politiques RLS (Row-Level Security)
-- Fonction `validate_referral()` pour créditer les mois Pro
+Ce script crée les trois tables, les index, les politiques RLS et la fonction `validate_referral()` :
 
-### 6. Lancer en développement
-
-```bash
-npm run dev
+```sql
+-- Tables créées
+users        (id, email, name, avatar, plan, referral_code, pro_months_remaining, created_at)
+referrals    (id, referrer_id, referred_id, status, reward_months, created_at)
+diagnostics  (id, user_id, url, verdict, red_flags_count, details, analyzed_at)
 ```
 
-Ouvrez [http://localhost:3000](http://localhost:3000).
+---
+
+## Déploiement sur Vercel
+
+1. Pousser le dépôt sur GitHub
+2. Importer le projet sur [Vercel](https://vercel.com/new)
+3. Dans **Settings › Environment Variables**, ajouter toutes les variables listées ci-dessus
+4. Mettre à jour `NEXTAUTH_URL` avec l'URL Vercel attribuée (ex. `https://preshot-landing.vercel.app`)
+5. Ajouter l'URL Vercel dans les URI de redirection Google Cloud Console
+6. Déployer — Vercel détecte automatiquement Next.js
 
 ---
 
-## Pages
+## Architecture du projet
 
-| Route | Description | Auth requise |
-|---|---|---|
-| `/` | Landing page (Hero, Features, Pricing) | Non |
-| `/dashboard/historique` | Historique des sites analysés + score sécurité | Oui |
-| `/dashboard/parrainage` | Programme parrainage (Pro uniquement) | Oui (Pro) |
-| `/dashboard/profil` | Profil Google + gestion abonnement | Oui |
+```
+src/
+├── app/
+│   ├── page.tsx                          # Landing page publique (/)
+│   ├── layout.tsx                        # Layout racine + SessionProvider
+│   ├── globals.css                       # Styles globaux Tailwind
+│   │
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts   # Handler NextAuth (GET + POST)
+│   │   ├── diagnostics/
+│   │   │   ├── route.ts                  # POST — reçoit les diagnostics de l'extension
+│   │   │   └── list/route.ts             # GET  — liste les diagnostics de l'utilisateur
+│   │   └── referrals/
+│   │       ├── apply/route.ts            # POST — applique un code de parrainage
+│   │       └── list/route.ts             # GET  — liste les parrainages
+│   │
+│   ├── dashboard/
+│   │   ├── layout.tsx                    # Auth guard — redirige vers / si non connecté
+│   │   ├── historique/page.tsx           # Historique des diagnostics
+│   │   ├── parrainage/page.tsx           # Programme de parrainage
+│   │   └── profil/page.tsx              # Profil utilisateur
+│   │
+│   └── ref/[code]/
+│       ├── page.tsx                      # Page d'invitation publique (/ref/PRESHOT-XXXX)
+│       └── RefInviteClient.tsx           # Bouton OAuth + sauvegarde code en localStorage
+│
+├── components/
+│   ├── AuthProvider.tsx                  # SessionProvider (client)
+│   ├── Navbar.tsx                        # Navigation principale
+│   ├── Hero.tsx                          # Section hero de la landing
+│   ├── Features.tsx                      # Section fonctionnalités
+│   ├── Pricing.tsx                       # Tableau comparatif des plans
+│   ├── Footer.tsx                        # Pied de page
+│   └── dashboard/
+│       ├── DashboardNav.tsx              # Sidebar de navigation du dashboard
+│       ├── HistoriqueDashboard.tsx       # Composant historique (client, fetch API)
+│       ├── ReferralDashboard.tsx         # Composant parrainage (client, fetch API)
+│       └── ProfilView.tsx               # Composant profil (client)
+│
+├── lib/
+│   ├── auth.ts                           # Configuration NextAuth + création utilisateur Supabase
+│   ├── supabase.ts                       # Clients Supabase (public lazy + service role)
+│   └── referral.ts                       # Tiers, constantes et helpers parrainage
+│
+└── types/
+    ├── index.ts                          # Types métier (User, Referral, Diagnostic…)
+    └── next-auth.d.ts                    # Augmentation du type Session NextAuth
+
+supabase/
+└── migrations/
+    └── 001_initial.sql                   # Schéma complet (tables, RLS, index, fonctions)
+```
 
 ---
 
-## Logique de parrainage
+## Lien avec l'extension Chrome
 
-| Parrainages validés | Récompense filleul |
+L'extension appelle `POST /api/diagnostics` après chaque analyse de site. Le endpoint est ouvert aux requêtes cross-origin (headers CORS inclus) pour autoriser les appels depuis `chrome-extension://`.
+
+### Corps de la requête
+
+```json
+{
+  "email": "utilisateur@gmail.com",
+  "url": "https://site-analyse.com",
+  "verdict": "safe | warning | danger",
+  "red_flags_count": 2,
+  "details": { "redFlags": ["no_https", "recent_domain"] }
+}
+```
+
+### Réponses
+
+| Code | Signification |
 |---|---|
-| 1 | 3 mois Pro |
-| 5 | 6 mois Pro |
-| 10 | 12 mois Pro + badge Fondateur |
+| `200` | Diagnostic enregistré |
+| `404` | Email inconnu — utilisateur non inscrit sur la landing |
+| `422` | Champs manquants ou verdict invalide |
+| `500` | Erreur serveur Supabase |
 
-Le statut `pending` → `validated` se fait via la fonction SQL `validate_referral()` (à appeler depuis un webhook Stripe ou votre logique métier quand le filleul souscrit Pro).
+### Intégration dans l'extension
+
+Dans `background/service_worker.js`, après chaque analyse complète, l'extension récupère l'email de l'utilisateur connecté via `chrome.identity` et envoie le diagnostic :
+
+```js
+async function preshot_sendDiagnostic(email, url, verdict, redFlagsCount, details) {
+  await fetch('https://votre-domaine.vercel.app/api/diagnostics', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, url, verdict, red_flags_count: redFlagsCount, details })
+  })
+}
+```
+
+Remplacer `http://localhost:3000` par l'URL Vercel de production avant de publier l'extension.
 
 ---
 
-## Déploiement (Vercel)
+## Système de parrainage
 
-```bash
-npm run build   # Vérifier la compilation
-```
+Chaque utilisateur Pro dispose d'un code unique au format `PRESHOT-XXXXXXXX`.
 
-1. Pousser sur GitHub
-2. Importer sur [Vercel](https://vercel.com)
-3. Ajouter toutes les variables d'environnement
-4. Mettre à jour `NEXTAUTH_URL` avec votre domaine Vercel
-5. Ajouter l'URL de production dans Google Cloud Console
+| Parrainages validés | Badge | Récompense cumulée (parrain) |
+|---|---|---|
+| 1 | — | +1 mois Pro |
+| 3 | Silver | +3 mois Pro |
+| 6 | Gold | +6 mois Pro (plafond annuel) |
+
+Le filleul reçoit **1 mois Pro** à chaque utilisation d'un code valide. Le parrain est plafonné à **6 parrainages validés par an**.
 
 ---
 
@@ -160,9 +235,6 @@ npm run build   # Vérifier la compilation
 |---|---|
 | Fond | `#0a0a0a` |
 | Surface | `#111111` |
-| Surface-2 | `#1a1a1a` |
 | Violet accent | `#7c3aed` |
 | Bleu accent | `#3b82f6` |
-| Dégradé hero | `violet → bleu` |
 | Police | Inter (Google Fonts) |
-# preshot_landing
