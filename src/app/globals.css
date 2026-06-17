@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -22,7 +22,7 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-surface;
+    @apply bg-background;
   }
 
   ::-webkit-scrollbar-thumb {
@@ -35,47 +35,140 @@
     @apply bg-gradient-to-r from-violet-light to-blue-accent bg-clip-text text-transparent;
   }
 
-  .btn-primary {
-    @apply inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white
-           bg-gradient-to-r from-violet to-blue-accent
-           hover:opacity-90 active:scale-95 transition-all duration-200 shadow-lg shadow-violet/25;
+  /* Pill button — outlined, used in the navbar ("Se connecter") */
+  .btn-pill {
+    @apply inline-flex items-center justify-center px-[22px] py-[10px] rounded-full
+           border border-violet text-white text-sm font-medium uppercase tracking-tight
+           bg-black hover:bg-violet/20 active:scale-95 transition-all duration-200;
   }
 
-  .btn-outline {
-    @apply inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white
-           border border-white/20 hover:border-violet/60 hover:bg-white/5
-           active:scale-95 transition-all duration-200;
+  /* Big rounded outline CTAs used in the pricing section.
+     No glow: just a soft pool of the border colour bleeding in from the
+     bottom-right corner, which expands to fill the whole button on hover. */
+  .btn-cta {
+    @apply relative inline-flex items-center justify-center w-[200px] h-[54px]
+           rounded-[14px] border-4 bg-black font-medium tracking-wide text-white text-base
+           active:scale-95;
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    background-size: 60% 70%;
+    transition: background-size 0.45s ease, transform 0.2s ease;
   }
 
-  .card {
-    @apply rounded-2xl border border-white/10 bg-surface-2 p-6;
+  .btn-cta:hover {
+    background-size: 300% 300%;
   }
 
-  .card-gradient {
-    @apply rounded-2xl border border-violet/20 bg-gradient-card p-6;
+  .btn-cta-violet {
+    @apply btn-cta border-violet;
+    background-image: radial-gradient(
+      circle at bottom right,
+      #682db4 0%,
+      #682db4 35%,
+      transparent 72%
+    );
   }
 
-  .badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  .btn-cta-blue {
+    @apply btn-cta border-blue-accent;
+    background-image: radial-gradient(
+      circle at bottom right,
+      #3e74ff 0%,
+      #3e74ff 35%,
+      transparent 72%
+    );
   }
 
-  .badge-safe {
-    @apply badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+  /* Decorative glass surface: vertical translucent stripes + soft color blobs */
+  .glass-stripes {
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(0, 0, 0, 0.15) 60px,
+      rgba(255, 255, 255, 0.05) 105px
+    );
   }
 
-  .badge-warning {
-    @apply badge bg-amber-500/20 text-amber-400 border border-amber-500/30;
+  /* Hero glass columns — faithful to Figma: 105px-wide vertical slats with a
+     soft darkening across each slat and a bright highlight at its right edge.
+     Use with mix-blend-overlay so it only reads over the colored lights. */
+  .hero-columns {
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0px,
+      rgba(0, 0, 0, 0.3) 78.2px,
+      rgba(255, 255, 255, 0.3) 105px
+    );
+  }
+}
+
+@layer utilities {
+  /* Click-to-flip card */
+  .flip-card {
+    perspective: 1600px;
   }
 
-  .badge-danger {
-    @apply badge bg-red-500/20 text-red-400 border border-red-500/30;
+  .flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
   }
 
-  .badge-pending {
-    @apply badge bg-zinc-500/20 text-zinc-400 border border-zinc-500/30;
+  .flip-card.is-flipped .flip-inner {
+    transform: rotateY(180deg);
   }
 
-  .badge-validated {
-    @apply badge bg-violet/20 text-violet-light border border-violet/30;
+  .flip-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+    border-radius: 20px;
+  }
+
+  .flip-back {
+    transform: rotateY(180deg);
+  }
+
+  /* Hero lights — colored glows anchored at the bottom that drift slowly,
+     so the blue/violet read as living lights rather than a static wash. */
+  .animate-light-a {
+    transform-origin: bottom center;
+    animation: lightDriftA 9s ease-in-out infinite;
+  }
+
+  .animate-light-b {
+    transform-origin: bottom center;
+    animation: lightDriftB 12s ease-in-out infinite;
+  }
+
+  @keyframes lightDriftA {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1.04);
+    }
+    50% {
+      transform: translate3d(2.5%, -1.5%, 0) scale(1.12);
+    }
+  }
+
+  @keyframes lightDriftB {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1.05);
+    }
+    50% {
+      transform: translate3d(-2.5%, -1%, 0) scale(1.13);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-light-a,
+    .animate-light-b {
+      animation: none;
+    }
   }
 }

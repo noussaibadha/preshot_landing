@@ -1,40 +1,27 @@
 'use client'
 
 import { signIn, useSession } from 'next-auth/react'
+import Link from 'next/link'
 
-const freeFeatures = [
-  { label: 'Détection fraudes en temps réel', included: true },
-  { label: 'Historique 7 derniers jours', included: true },
-  { label: 'Alertes dark patterns basiques', included: true },
-  { label: 'Newsletter mensuelle', included: true },
-  { label: 'Historique illimité (30 jours)', included: false },
-  { label: 'Export CSV des diagnostics', included: false },
-  { label: 'Programme de parrainage', included: false },
-  { label: 'Support prioritaire', included: false },
+type Cell = 'free' | 'pro' | 'none'
+
+const rows: { label: string; gratuit: Cell; pro: Cell }[] = [
+  { label: 'Parrainage', gratuit: 'free', pro: 'pro' },
+  { label: 'Newsletter mensuelle', gratuit: 'free', pro: 'pro' },
+  { label: 'Historique de vérification', gratuit: 'none', pro: 'pro' },
+  { label: 'Détection de dark patterns', gratuit: 'none', pro: 'pro' },
 ]
 
-const proFeatures = [
-  { label: 'Détection fraudes en temps réel', included: true },
-  { label: 'Historique illimité (30 jours)', included: true },
-  { label: 'Alertes dark patterns avancées', included: true },
-  { label: 'Newsletter hebdomadaire', included: true },
-  { label: 'Export CSV des diagnostics', included: true },
-  { label: 'Programme de parrainage', included: true },
-  { label: 'Support prioritaire', included: true },
-  { label: 'Badge Fondateur (10 parrainages)', included: true },
-]
-
-function CheckIcon({ included }: { included: boolean }) {
-  if (included) {
-    return (
-      <svg className="w-5 h-5 text-violet-light shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-      </svg>
-    )
-  }
+function Check({ variant }: { variant: Cell }) {
+  const color =
+    variant === 'free' ? 'text-violet-light' : variant === 'pro' ? 'text-blue-accent' : 'text-white/15'
   return (
-    <svg className="w-5 h-5 text-white/20 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    <svg className={`w-[34px] h-[34px] ${color}`} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path
+        fillRule="evenodd"
+        d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.7 7.3-5.4 5.4a1 1 0 0 1-1.4 0l-2.6-2.6a1 1 0 1 1 1.4-1.4l1.9 1.9 4.7-4.7a1 1 0 0 1 1.4 1.4Z"
+        clipRule="evenodd"
+      />
     </svg>
   )
 }
@@ -43,89 +30,72 @@ export function Pricing() {
   const { data: session } = useSession()
 
   return (
-    <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 text-sm font-medium mb-6">
-            Tarifs
-          </div>
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            Simple et <span className="gradient-text">transparent</span>
-          </h2>
-          <p className="text-white/50 text-lg max-w-xl mx-auto">
-            Commencez gratuitement. Passez Pro quand vous êtes prêt.
-          </p>
-        </div>
+    <section id="pricing" className="py-24 px-6 lg:px-8">
+      <div className="max-w-[991px] mx-auto">
+        {/* Title */}
+        <h2 className="text-center text-4xl sm:text-5xl font-medium tracking-tight leading-tight mb-16">
+          Simple et transparent.
+          <br />
+          <span className="text-white/70">Commencez gratuitement,</span>
+          <br />
+          <span className="text-white/70">passez Pro quand vous le souhaitez.</span>
+        </h2>
 
-        {/* Plans grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          {/* Free plan */}
-          <div className="card">
-            <div className="mb-6">
-              <p className="text-sm font-medium text-white/50 mb-1">Gratuit</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold">0€</span>
-                <span className="text-white/40 text-sm">/mois</span>
-              </div>
-              <p className="text-white/40 text-sm mt-2">Pour les navigateurs occasionnels</p>
+        {/* Comparison table */}
+        <div className="w-full">
+          {/* Header */}
+          <div className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-3 items-end gap-4 border-b border-muted pb-4">
+            <p className="text-sm sm:text-xl font-medium tracking-widest">Fonctionnalité</p>
+            <div className="text-center min-w-[90px] sm:min-w-0">
+              <p className="text-base sm:text-xl font-medium tracking-widest text-violet-light">Gratuit</p>
+              <p className="text-2xl sm:text-4xl font-semibold text-violet">0€</p>
             </div>
-            <a
-              href="https://chrome.google.com/webstore"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-outline w-full justify-center mb-8"
+            <div className="text-center min-w-[90px] sm:min-w-0">
+              <p className="text-base sm:text-xl font-medium tracking-widest text-blue-accent">Pro</p>
+              <p className="text-blue-accent">
+                <span className="text-2xl sm:text-4xl font-semibold">4,99€</span>
+                <span className="text-sm sm:text-base">/mois</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Rows */}
+          {rows.map((row) => (
+            <div
+              key={row.label}
+              className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-3 items-center gap-4 border-b border-muted py-6"
             >
-              Télécharger gratuitement
-            </a>
-            <ul className="space-y-3">
-              {freeFeatures.map((f, i) => (
-                <li key={i} className={`flex items-center gap-3 text-sm ${f.included ? 'text-white/80' : 'text-white/25'}`}>
-                  <CheckIcon included={f.included} />
-                  {f.label}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Pro plan */}
-          <div className="relative rounded-2xl p-[1px] bg-gradient-to-br from-violet to-blue-accent shadow-2xl shadow-violet/20">
-            <div className="rounded-2xl bg-surface-2 p-6 h-full">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="px-4 py-1 rounded-full text-xs font-bold bg-gradient-hero text-white shadow-lg">
-                  Recommandé
-                </span>
+              <p className="text-sm sm:text-xl font-medium tracking-wide">{row.label}</p>
+              <div className="flex justify-center min-w-[90px] sm:min-w-0">
+                <Check variant={row.gratuit} />
               </div>
-              <div className="mb-6 mt-2">
-                <p className="text-sm font-medium text-violet-light mb-1">Pro</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold">4,99€</span>
-                  <span className="text-white/40 text-sm">/mois</span>
-                </div>
-                <p className="text-white/40 text-sm mt-2">Pour une protection complète</p>
+              <div className="flex justify-center min-w-[90px] sm:min-w-0">
+                <Check variant={row.pro} />
               </div>
-              <button
-                onClick={() => !session && signIn('google')}
-                className="btn-primary w-full justify-center mb-8"
-              >
-                {session ? 'Passer Pro' : 'Commencer maintenant'}
-              </button>
-              <ul className="space-y-3">
-                {proFeatures.map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-white/80">
-                    <CheckIcon included={f.included} />
-                    {f.label}
-                  </li>
-                ))}
-              </ul>
             </div>
-          </div>
+          ))}
         </div>
 
-        {/* Trust note */}
-        <p className="text-center text-white/30 text-sm mt-8">
-          Paiement sécurisé · Annulation à tout moment · Sans engagement
-        </p>
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-5 mt-12">
+          <a
+            href="https://chrome.google.com/webstore"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-cta-violet"
+          >
+            Installer l&apos;extension
+          </a>
+          {session ? (
+            <Link href="/dashboard/profil" className="btn-cta-blue">
+              Passer Pro
+            </Link>
+          ) : (
+            <button onClick={() => signIn('google')} className="btn-cta-blue">
+              Passer Pro
+            </button>
+          )}
+        </div>
       </div>
     </section>
   )

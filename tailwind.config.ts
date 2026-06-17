@@ -9,34 +9,41 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: '#0a0a0a',
-        surface: '#111111',
-        'surface-2': '#1a1a1a',
+        background: '#000000',
+        surface: '#0a0a0a',
+        'surface-2': '#111111',
         violet: {
-          DEFAULT: '#7c3aed',
-          light: '#8b5cf6',
-          dark: '#6d28d9',
+          DEFAULT: '#682db4',
+          light: '#8b3cf0',
+          dark: '#4e2189',
         },
         blue: {
-          accent: '#3b82f6',
+          accent: '#3e74ff',
         },
+        'icon-bg': '#3642bb',
+        muted: '#818181',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Poppins', 'system-ui', 'sans-serif'],
       },
       backgroundImage: {
-        'gradient-hero': 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
-        'gradient-card': 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(59,130,246,0.15) 100%)',
-        'gradient-text': 'linear-gradient(90deg, #8b5cf6 0%, #3b82f6 100%)',
+        'gradient-hero': 'linear-gradient(135deg, #682db4 0%, #3e74ff 100%)',
+        'gradient-card': 'linear-gradient(135deg, rgba(104,45,180,0.15) 0%, rgba(62,116,255,0.15) 100%)',
+        'gradient-text': 'linear-gradient(90deg, #8b3cf0 0%, #3e74ff 100%)',
       },
       animation: {
         'fade-up': 'fadeUp 0.6s ease-out forwards',
-        'pulse-slow': 'pulse 3s ease-in-out infinite',
+        'pulse-slow': 'pulse 4s ease-in-out infinite',
+        'bounce-slow': 'bounceSlow 2s ease-in-out infinite',
       },
       keyframes: {
         fadeUp: {
           '0%': { opacity: '0', transform: 'translateY(24px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        bounceSlow: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(10px)' },
         },
       },
     },
