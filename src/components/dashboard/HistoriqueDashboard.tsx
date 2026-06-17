@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Diagnostic, Verdict } from '@/types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 type Filter = 'all' | Verdict | 'recent'
 
-interface Props {
+interface ApiResponse {
   diagnostics: Diagnostic[]
   securityScore: number
-  recentTotal: number
+  totalCount: number
+  dangerCount: number
 }
 
 const VERDICT_LABELS: Record<Verdict, string> = {
@@ -31,8 +32,30 @@ function scoreColor(score: number) {
   return 'text-red-400'
 }
 
-export function HistoriqueDashboard({ diagnostics, securityScore, recentTotal }: Props) {
+export function HistoriqueDashboard() {
+  const [data, setData] = useState<ApiResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
+
+  const fetchDiagnostics = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/diagnostics/list')
+      if (!res.ok) throw new Error(`Erreur ${res.status}`)
+      const json: ApiResponse = await res.json()
+      setData(json)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur inconnue')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchDiagnostics() }, [fetchDiagnostics])
+
+  const diagnostics = data?.diagnostics ?? []
 
   const filtered = useMemo(() => {
     if (filter === 'all') return diagnostics
@@ -65,43 +88,90 @@ export function HistoriqueDashboard({ diagnostics, securityScore, recentTotal }:
     { key: 'recent', label: 'Récent (7j)' },
   ]
 
+  // ── États de chargement / erreur ──────────────────────────────
+  if (loading) {
+    return (
+      <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Historique des diagnostics</h1>
+          <p className="text-white/50">Tous les sites analysés par PreShot.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="card animate-pulse">
+              <div className="h-10 bg-white/5 rounded-lg mb-2" />
+              <div className="h-4 bg-white/5 rounded w-2/3 mx-auto" />
+            </div>
+          ))}
+        </div>
+        <div className="card animate-pulse h-64" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+        <div className="card-gradient text-center py-16">
+          <p className="text-red-400 font-semibold mb-2">Impossible de charger l&apos;historique</p>
+          <p className="text-white/40 text-sm mb-6">{error}</p>
+          <button onClick={fetchDiagnostics} className="btn-primary text-sm py-2 px-4">
+            Réessayer
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Vue principale ────────────────────────────────────────────
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold mb-1">Historique des diagnostics</h1>
-          <p className="text-white/50">Tous les sites analysés par PreShot.</p>
+          <p className="text-white/50">
+            20 analyses les plus récentes · score calculé sur 30 jours
+          </p>
         </div>
-        <button
-          onClick={exportCSV}
-          className="btn-outline text-sm py-2 px-4 shrink-0"
-          disabled={diagnostics.length === 0}
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Exporter CSV
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={fetchDiagnostics}
+            className="btn-outline text-sm py-2 px-3"
+            title="Actualiser"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+          <button
+            onClick={exportCSV}
+            className="btn-outline text-sm py-2 px-4"
+            disabled={diagnostics.length === 0}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Exporter CSV
+          </button>
+        </div>
       </div>
 
-      {/* Score + quick stats */}
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card text-center col-span-1">
-          <p className={`text-5xl font-extrabold mb-1 ${scoreColor(securityScore)}`}>
-            {securityScore}
+        <div className="card text-center">
+          <p className={`text-5xl font-extrabold mb-1 ${scoreColor(data!.securityScore)}`}>
+            {data!.securityScore}
           </p>
           <p className="text-sm text-white/50">Score de sécurité</p>
           <p className="text-xs text-white/30 mt-1">30 derniers jours</p>
         </div>
         <div className="card text-center">
-          <p className="text-3xl font-extrabold gradient-text">{diagnostics.length}</p>
+          <p className="text-3xl font-extrabold gradient-text">{data!.totalCount}</p>
           <p className="text-sm text-white/50 mt-1">Sites analysés</p>
         </div>
         <div className="card text-center">
-          <p className="text-3xl font-extrabold text-red-400">
-            {diagnostics.filter((d) => d.verdict === 'danger').length}
-          </p>
+          <p className="text-3xl font-extrabold text-red-400">{data!.dangerCount}</p>
           <p className="text-sm text-white/50 mt-1">Sites dangereux détectés</p>
         </div>
       </div>

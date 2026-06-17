@@ -2,9 +2,12 @@
 
 import { useState } from 'react'
 import { Session } from 'next-auth'
-import { Referral, ReferralTier } from '@/types'
+import { Referral } from '@/types'
+import { ReferralTier } from '@/lib/referral'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+
+type ApplyStatus = 'idle' | 'loading' | 'success' | 'error'
 
 interface Props {
   session: Session
@@ -12,20 +15,51 @@ interface Props {
   validatedCount: number
   tiers: ReferralTier[]
   nextTier: ReferralTier | null
+  hasUsedReferral: boolean
 }
 
-export function ReferralDashboard({ session, referrals, validatedCount, tiers, nextTier }: Props) {
+export function ReferralDashboard({ session, referrals, validatedCount, tiers, nextTier, hasUsedReferral }: Props) {
   const [copied, setCopied] = useState(false)
-  const referralLink = `https://preshot.app/ref/${session.user.referral_code}`
+  const [codeInput, setCodeInput] = useState('')
+  const [applyStatus, setApplyStatus] = useState<ApplyStatus>('idle')
+  const [applyMessage, setApplyMessage] = useState('')
+
+  const displayCode = `PRESHOT-${session.user.referral_code}`
 
   const totalReward = referrals
     .filter((r) => r.status === 'validated')
     .reduce((acc, r) => acc + r.reward_months, 0)
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(referralLink)
+    await navigator.clipboard.writeText(displayCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleApplyCode() {
+    const trimmed = codeInput.trim()
+    if (!trimmed) return
+    setApplyStatus('loading')
+    setApplyMessage('')
+    try {
+      const res = await fetch('/api/referrals/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: trimmed, email: session.user.email }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setApplyStatus('error')
+        setApplyMessage(data.error ?? 'Une erreur est survenue')
+      } else {
+        setApplyStatus('success')
+        setApplyMessage('1 mois Pro ajouté à votre compte !')
+        setCodeInput('')
+      }
+    } catch {
+      setApplyStatus('error')
+      setApplyMessage('Impossible de contacter le serveur')
+    }
   }
 
   return (
@@ -36,12 +70,12 @@ export function ReferralDashboard({ session, referrals, validatedCount, tiers, n
         <p className="text-white/50">Invitez vos proches et gagnez des mois Pro.</p>
       </div>
 
-      {/* Referral link */}
+      {/* Referral code */}
       <div className="card-gradient">
-        <p className="text-sm text-white/50 mb-3 font-medium">Votre lien unique</p>
+        <p className="text-sm text-white/50 mb-3 font-medium">Votre code de parrainage</p>
         <div className="flex items-center gap-3">
-          <code className="flex-1 px-4 py-3 rounded-xl bg-black/30 text-violet-light text-sm font-mono truncate border border-violet/20">
-            {referralLink}
+          <code className="flex-1 px-4 py-3 rounded-xl bg-black/30 text-violet-light text-lg font-mono tracking-widest truncate border border-violet/20">
+            {displayCode}
           </code>
           <button
             onClick={handleCopy}
@@ -98,8 +132,7 @@ export function ReferralDashboard({ session, referrals, validatedCount, tiers, n
                     {tier.threshold} parrainage{tier.threshold > 1 ? 's' : ''} validé{tier.threshold > 1 ? 's' : ''}
                   </p>
                   <p className={`text-xs mt-0.5 ${reached ? 'text-violet-light' : 'text-white/25'}`}>
-                    {tier.months} mois Pro offerts au filleul
-                    {tier.badge && ` · Badge ${tier.badge}`}
+                    {tier.description}
                   </p>
                 </div>
                 {reached && (
@@ -124,6 +157,64 @@ export function ReferralDashboard({ session, referrals, validatedCount, tiers, n
                 style={{ width: `${Math.min((validatedCount / nextTier.threshold) * 100, 100)}%` }}
               />
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Utiliser un code */}
+      <div className="card space-y-4">
+        <div>
+          <h2 className="font-semibold">Vous avez un code de parrainage ?</h2>
+          <p className="text-sm text-white/40 mt-0.5">
+            Entrez le code d&apos;un ami pour obtenir 1 mois Pro gratuit.
+          </p>
+        </div>
+
+        {hasUsedReferral || applyStatus === 'success' ? (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            {applyStatus === 'success'
+              ? applyMessage
+              : 'Vous avez déjà utilisé un code de parrainage'}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={codeInput}
+                onChange={(e) => {
+                  setCodeInput(e.target.value.toUpperCase())
+                  if (applyStatus !== 'idle') { setApplyStatus('idle'); setApplyMessage('') }
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && handleApplyCode()}
+                placeholder="PRESHOT-XXXXXX"
+                className="flex-1 px-4 py-3 rounded-xl bg-black/30 border border-white/10 text-white font-mono text-sm placeholder:text-white/20 focus:outline-none focus:border-violet/50 focus:ring-1 focus:ring-violet/30 transition-all"
+              />
+              <button
+                onClick={handleApplyCode}
+                disabled={applyStatus === 'loading' || !codeInput.trim()}
+                className="btn-primary text-sm py-3 px-5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {applyStatus === 'loading' ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+                  </svg>
+                ) : 'Appliquer'}
+              </button>
+            </div>
+
+            {applyStatus === 'error' && (
+              <div className="flex items-center gap-2 text-sm text-red-400 px-1">
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {applyMessage}
+              </div>
+            )}
           </div>
         )}
       </div>

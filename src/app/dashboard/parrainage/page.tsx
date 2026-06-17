@@ -44,6 +44,13 @@ export default async function ParrainagePage() {
   const validatedCount = (referrals ?? []).filter((r: Referral) => r.status === 'validated').length
   const nextTier = getNextTier(validatedCount)
 
+  // Vérifie si cet utilisateur a déjà utilisé un code en tant que filleul
+  const { count: usedCount } = await db
+    .from('referrals')
+    .select('*', { count: 'exact', head: true })
+    .eq('referred_id', session!.user.id)
+    .eq('status', 'validated')
+
   return (
     <ReferralDashboard
       session={session!}
@@ -51,6 +58,7 @@ export default async function ParrainagePage() {
       validatedCount={validatedCount}
       tiers={REFERRAL_TIERS}
       nextTier={nextTier}
+      hasUsedReferral={(usedCount ?? 0) > 0}
     />
   )
 }

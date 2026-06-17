@@ -37,9 +37,4 @@ export interface Diagnostic {
   analyzed_at: string
 }
 
-export interface ReferralTier {
-  threshold: number
-  months: number
-  label: string
-  badge?: string
-}
+// ReferralTier is defined in @/lib/referral — import from there
