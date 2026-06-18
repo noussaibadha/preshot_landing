@@ -106,12 +106,12 @@ export async function POST(req: NextRequest) {
     if (insertError.code === '23505') {
       return NextResponse.json({ error: 'Parrainage déjà enregistré' }, { status: 409 })
     }
-    console.error('[referrals/apply] insert:', insertError)
+    console.error('[referrals/apply] insert error:', insertError)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 
-  // Créditer le filleul (+1 mois, plan → pro)
-  await db
+  // Créditer le filleul (+1 mois Pro)
+  const { error: filleulUpdateError } = await db
     .from('users')
     .update({
       plan: 'pro',
@@ -119,11 +119,27 @@ export async function POST(req: NextRequest) {
     })
     .eq('id', filleul.id)
 
-  // Créditer le parrain (+1 mois)
-  await db
+  if (filleulUpdateError) {
+    console.error('[referrals/apply] filleul update error:', filleulUpdateError)
+    return NextResponse.json({ error: 'Erreur lors du crédit filleul' }, { status: 500 })
+  }
+
+  // Créditer le parrain (+1 mois Pro)
+  const { error: referrerUpdateError } = await db
     .from('users')
     .update({ pro_months_remaining: referrer.pro_months_remaining + REWARD_MONTHS_PER_REFERRAL })
     .eq('id', referrer.id)
+
+  if (referrerUpdateError) {
+    console.error('[referrals/apply] referrer update error:', referrerUpdateError)
+    // Le filleul a déjà été crédité — on log mais on ne fait pas échouer la réponse
+  }
+
+  console.log('[PreShot] referral applied:', {
+    referrer: { id: referrer.id, months_before: referrer.pro_months_remaining, months_after: referrer.pro_months_remaining + REWARD_MONTHS_PER_REFERRAL },
+    referred: { id: filleul.id, months_before: filleul.pro_months_remaining, months_after: filleul.pro_months_remaining + REWARD_MONTHS_PER_REFERRAL },
+    reward: REWARD_MONTHS_PER_REFERRAL,
+  })
 
   return NextResponse.json({ success: true, months_offered: REWARD_MONTHS_PER_REFERRAL })
 }
