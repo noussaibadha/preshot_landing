@@ -64,7 +64,7 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <button onClick={() => signIn('google')} className="btn-pill">
+            <button onClick={() => signIn('google', { callbackUrl: '/dashboard/profil' })} className="btn-pill">
               Se connecter
             </button>
           )}
@@ -105,7 +105,7 @@ export function Navbar() {
                 Déconnexion
               </button>
             ) : (
-              <button onClick={() => signIn('google')} className="btn-pill w-full">
+              <button onClick={() => signIn('google', { callbackUrl: '/dashboard/profil' })} className="btn-pill w-full">
                 Se connecter
               </button>
             )}

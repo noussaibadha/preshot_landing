@@ -91,7 +91,7 @@ export function Pricing() {
               <span className="relative z-10">Passer Pro</span>
             </Link>
           ) : (
-            <button onClick={() => signIn('google')} className="btn-cta-blue">
+            <button onClick={() => signIn('google', { callbackUrl: '/dashboard/profil' })} className="btn-cta-blue">
               <span className="relative z-10">Passer Pro</span>
             </button>
           )}
