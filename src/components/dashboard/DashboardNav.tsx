@@ -6,33 +6,9 @@ import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
 
 const navItems = [
-  {
-    href: '/dashboard/historique',
-    label: 'Historique',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-    ),
-  },
-  {
-    href: '/dashboard/parrainage',
-    label: 'Parrainage',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/dashboard/profil',
-    label: 'Profil',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    ),
-  },
+  { href: '/dashboard/profil', label: 'Profil' },
+  { href: '/dashboard/historique', label: 'Historique' },
+  { href: '/dashboard/parrainage', label: 'Parrainage' },
 ]
 
 export function DashboardNav() {
@@ -40,65 +16,82 @@ export function DashboardNav() {
   const { data: session } = useSession()
 
   return (
-    <aside className="w-64 shrink-0 hidden lg:flex flex-col border-r border-white/5 bg-surface min-h-screen sticky top-0">
-      {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-white/5">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-hero flex items-center justify-center font-bold text-xs">P</div>
-          <span className="font-bold">Pre<span className="gradient-text">Shot</span></span>
+    <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-white/5 bg-[#0f1215] px-6 lg:px-16">
+      {/* Logo + nav */}
+      <div className="flex items-center gap-10">
+        <Link href="/" className="text-2xl font-semibold tracking-tight text-white">
+          Preshot
         </Link>
+
+        <nav className="hidden items-center gap-9 md:flex">
+          {navItems.map((item) => {
+            const active = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="relative py-2 text-base font-semibold tracking-tight transition-colors"
+              >
+                <span className={active ? 'text-[#8e3ef2]' : 'text-white hover:text-white/80'}>
+                  {item.label}
+                </span>
+                {active && (
+                  <span className="absolute -bottom-px left-0 h-0.5 w-full rounded-full bg-[#8e3ef2]" />
+                )}
+              </Link>
+            )
+          })}
+        </nav>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => {
-          const active = pathname === item.href
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                active
-                  ? 'bg-violet/20 text-violet-light border border-violet/20'
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          )
-        })}
-      </nav>
+      {/* Right: bell + user + logout */}
+      <div className="flex items-center gap-5">
+        <button
+          aria-label="Notifications"
+          className="text-white/70 transition-colors hover:text-white"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 0 0-4-5.7V5a2 2 0 1 0-4 0v.3A6 6 0 0 0 6 11v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
+          </svg>
+        </button>
 
-      {/* User */}
-      <div className="p-4 border-t border-white/5">
+        <div className="hidden h-6 w-px bg-white/10 sm:block" />
+
         {session && (
-          <div className="flex items-center gap-3 px-2 mb-3">
+          <Link
+            href="/dashboard/profil"
+            className="flex items-center gap-3 transition-opacity hover:opacity-80"
+          >
+            <span className="hidden text-sm font-medium text-[#e1e2e7] sm:block">
+              {session.user.name}
+            </span>
             {session.user.image ? (
-              <Image src={session.user.image} alt="" width={32} height={32} className="rounded-full" />
+              <Image
+                src={session.user.image}
+                alt=""
+                width={38}
+                height={38}
+                className="rounded-full ring-2 ring-violet/40"
+              />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-hero flex items-center justify-center text-xs font-bold">
-                {session.user.name?.[0]}
+              <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-gradient-hero text-sm font-bold">
+                {session.user.name?.[0] ?? 'U'}
               </div>
             )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{session.user.name}</p>
-              <span className={`text-xs font-semibold ${session.user.plan === 'pro' ? 'text-violet-light' : 'text-white/40'}`}>
-                {session.user.plan === 'pro' ? 'Pro' : 'Gratuit'}
-              </span>
-            </div>
-          </div>
+          </Link>
         )}
+
         <button
           onClick={() => signOut({ callbackUrl: '/' })}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/40 hover:text-white hover:bg-white/5 transition-all"
+          aria-label="Déconnexion"
+          title="Déconnexion"
+          className="text-white/40 transition-colors hover:text-white"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />
           </svg>
-          Déconnexion
         </button>
       </div>
-    </aside>
+    </header>
   )
 }
