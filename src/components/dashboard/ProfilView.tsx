@@ -19,16 +19,6 @@ const AccountIcon = (
     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM6 21a6 6 0 0 1 12 0" />
   </svg>
 )
-const ShieldIcon = (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3 4 6v6c0 5 3.4 7.7 8 9 4.6-1.3 8-4 8-9V6l-8-3Z" />
-  </svg>
-)
-const BillingIcon = (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M5 6h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" />
-  </svg>
-)
 const LogoutIcon = (
   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />
@@ -127,14 +117,6 @@ export function ProfilView({ user }: Props) {
               {AccountIcon}
               Profil
             </span>
-            <button className="flex w-full items-center gap-3 rounded-full px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/5">
-              {ShieldIcon}
-              Sécurité
-            </button>
-            <button className="flex w-full items-center gap-3 rounded-full px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/5">
-              {BillingIcon}
-              Facturation
-            </button>
 
             <div className="my-3 ml-3 h-px w-[80%] bg-white/10" />
 
