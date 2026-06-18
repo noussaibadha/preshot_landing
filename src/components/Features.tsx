@@ -9,8 +9,6 @@ type Feature = {
   description: string
   /** Icon path (in /public/icons). */
   icon: string
-  /** Set when the SVG already includes its own badge (square + border). */
-  selfContained?: boolean
 }
 
 const features: Feature[] = [
@@ -20,7 +18,6 @@ const features: Feature[] = [
     description:
       "Invitez vos amis et vos proches grâce à un lien d'invitation pour créer une communauté et les inviter à se renseigner avant d'acheter.",
     icon: '/icons/parrainage.svg',
-    selfContained: true,
   },
   {
     title: (
@@ -120,15 +117,10 @@ function Card({ feature }: { feature: Feature }) {
           <CardBackground />
 
           <div className="relative z-10 flex h-full flex-col items-center justify-center gap-12 px-6 text-center">
-            {feature.selfContained ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={feature.icon} alt="" className="h-[100px] w-[100px]" />
-            ) : (
-              <div className="flex h-[100px] w-[100px] items-center justify-center rounded-[20px] border border-white bg-icon-bg">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={feature.icon} alt="" className="h-[60px] w-[60px]" />
-              </div>
-            )}
+            <div className="flex h-[100px] w-[100px] items-center justify-center rounded-full bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={feature.icon} alt="" className="h-[60px] w-[60px]" />
+            </div>
             <h3 className="text-3xl font-semibold leading-tight tracking-tight text-white">
               {feature.title}
             </h3>

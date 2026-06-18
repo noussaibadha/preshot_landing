@@ -39,46 +39,39 @@
   .btn-pill {
     @apply inline-flex items-center justify-center px-[22px] py-[10px] rounded-full
            border border-violet text-white text-sm font-medium uppercase tracking-tight
-           bg-black hover:bg-violet/20 active:scale-95 transition-all duration-200;
+           bg-black hover:bg-[#8A38F5] hover:border-[#8A38F5] active:scale-95 transition-all duration-200;
   }
 
   /* Big rounded outline CTAs used in the pricing section.
-     No glow: just a soft pool of the border colour bleeding in from the
-     bottom-right corner, which expands to fill the whole button on hover. */
+     Faithful to Figma: a SOLID colour triangle filling the bottom-right
+     corner (no gradient/fade), following the button's rounded shape. */
   .btn-cta {
     @apply relative inline-flex items-center justify-center w-[200px] h-[54px]
-           rounded-[14px] border-4 bg-black font-medium tracking-wide text-white text-base
-           active:scale-95;
-    background-repeat: no-repeat;
-    background-position: bottom right;
-    background-size: 60% 70%;
-    transition: background-size 0.45s ease, transform 0.2s ease;
+           overflow-hidden rounded-[14px] border-4 bg-black font-medium tracking-wide
+           text-white text-base transition-[filter,transform] duration-200
+           hover:brightness-110 active:scale-95;
   }
 
-  .btn-cta:hover {
-    background-size: 300% 300%;
+  .btn-cta::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* Bottom-right triangle, hypotenuse at ≈ -33° like the Figma fill. */
+    clip-path: polygon(100% 0, 100% 100%, 56% 100%);
   }
 
   .btn-cta-violet {
     @apply btn-cta border-violet;
-    /* Triangular colour wedge in the bottom-right corner (≈ -33° like Figma). */
-    background-image: linear-gradient(
-      327deg,
-      #682db4 0%,
-      #682db4 42%,
-      transparent 64%
-    );
+  }
+  .btn-cta-violet::after {
+    background-color: #682db4;
   }
 
   .btn-cta-blue {
     @apply btn-cta border-blue-accent;
-    /* Triangular colour wedge in the bottom-right corner (≈ -33° like Figma). */
-    background-image: linear-gradient(
-      327deg,
-      #3e74ff 0%,
-      #3e74ff 42%,
-      transparent 64%
-    );
+  }
+  .btn-cta-blue::after {
+    background-color: #3e74ff;
   }
 
   /* Decorative glass surface: vertical translucent stripes + soft color blobs */

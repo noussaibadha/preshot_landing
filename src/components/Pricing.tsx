@@ -84,15 +84,15 @@ export function Pricing() {
             rel="noopener noreferrer"
             className="btn-cta-violet"
           >
-            Installer l&apos;extension
+            <span className="relative z-10">Installer l&apos;extension</span>
           </a>
           {session ? (
             <Link href="/dashboard/profil" className="btn-cta-blue">
-              Passer Pro
+              <span className="relative z-10">Passer Pro</span>
             </Link>
           ) : (
             <button onClick={() => signIn('google')} className="btn-cta-blue">
-              Passer Pro
+              <span className="relative z-10">Passer Pro</span>
             </button>
           )}
         </div>
