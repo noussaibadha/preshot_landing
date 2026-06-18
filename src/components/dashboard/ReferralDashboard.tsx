@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Session } from 'next-auth'
 import { Referral } from '@/types'
 import { ReferralTier } from '@/lib/referral'
@@ -8,6 +8,8 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 type ApplyStatus = 'idle' | 'loading' | 'success' | 'error'
+
+const PENDING_CODE_KEY = 'preshot_pending_referral'
 
 interface Props {
   session: Session
@@ -23,6 +25,36 @@ export function ReferralDashboard({ session, referrals, validatedCount, tiers, n
   const [codeInput, setCodeInput] = useState('')
   const [applyStatus, setApplyStatus] = useState<ApplyStatus>('idle')
   const [applyMessage, setApplyMessage] = useState('')
+
+  // Auto-apply pending referral code stored before OAuth redirect
+  useEffect(() => {
+    if (hasUsedReferral) return
+    const pending = localStorage.getItem(PENDING_CODE_KEY)
+    if (!pending) return
+    localStorage.removeItem(PENDING_CODE_KEY)
+
+    setApplyStatus('loading')
+    fetch('/api/referrals/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: pending, email: session.user.email }),
+    })
+      .then((res) => res.json().then((data: { error?: string }) => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          setApplyStatus('error')
+          setApplyMessage(data.error ?? 'Une erreur est survenue')
+        } else {
+          setApplyStatus('success')
+          setApplyMessage('Code de parrainage appliqué ! 1 mois Pro ajouté à votre compte.')
+        }
+      })
+      .catch(() => {
+        setApplyStatus('error')
+        setApplyMessage('Impossible de contacter le serveur')
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const displayCode = `PRESHOT-${session.user.referral_code}`
 

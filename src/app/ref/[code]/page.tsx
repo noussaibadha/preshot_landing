@@ -13,7 +13,7 @@ export default async function RefPage({ params }: Props) {
     .from('users')
     .select('name, avatar, plan')
     .eq('referral_code', params.code)
-    .single()
+    .maybeSingle()
 
   // Code inexistant ou parrain plus Pro
   if (!referrer || referrer.plan !== 'pro') {

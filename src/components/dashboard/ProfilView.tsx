@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useState } from 'react'
 import { Session } from 'next-auth'
 import { signOut } from 'next-auth/react'
 import { User } from '@/types'
@@ -13,6 +14,13 @@ interface Props {
 }
 
 export function ProfilView({ user }: Props) {
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopyCode() {
+    await navigator.clipboard.writeText(`PRESHOT-${user.referral_code}`)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
    if (!user) return <div className="p-8 text-white/50">Chargement du profil...</div>
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto space-y-8">
@@ -102,9 +110,29 @@ export function ProfilView({ user }: Props) {
         <div className="card">
           <h3 className="font-semibold mb-3">Code de parrainage</h3>
           <div className="flex items-center gap-3">
-            <code className="flex-1 px-4 py-3 rounded-xl bg-black/30 text-violet-light font-mono text-sm border border-violet/20">
-              preshot.app/ref/{user.referral_code}
+            <code className="flex-1 px-4 py-3 rounded-xl bg-black/30 text-violet-light font-mono text-sm border border-violet/20 tracking-widest">
+              PRESHOT-{user.referral_code}
             </code>
+            <button
+              onClick={handleCopyCode}
+              className={`btn-primary text-sm py-3 shrink-0 ${copied ? 'opacity-80' : ''}`}
+            >
+              {copied ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Copié !
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copier
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}
