@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Diagnostic, Verdict } from '@/types'
-import { format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 type Filter = 'all' | Verdict | 'recent'
@@ -17,13 +17,13 @@ interface ApiResponse {
 const VERDICT_LABELS: Record<Verdict, string> = {
   safe: 'Sécurisé',
   warning: 'À risque',
-  danger: 'Dangereux',
+  danger: 'Bloqué',
 }
 
 const VERDICT_BADGE: Record<Verdict, string> = {
-  safe: 'badge-safe',
-  warning: 'badge-warning',
-  danger: 'badge-danger',
+  safe: 'border-[rgba(16,185,129,0.25)] bg-[rgba(16,185,129,0.18)] text-[#10b981]',
+  warning: 'border-[rgba(209,176,76,0.25)] bg-[rgba(209,176,76,0.2)] text-[#d1b04c]',
+  danger: 'border-[rgba(223,62,64,0.25)] bg-[rgba(223,62,64,0.18)] text-[#df3e40]',
 }
 
 function scoreColor(score: number) {
@@ -31,6 +31,24 @@ function scoreColor(score: number) {
   if (score >= 50) return 'text-amber-400'
   return 'text-red-400'
 }
+
+/* ---------- icons ---------- */
+const UploadIcon = (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-8-12v12m0-12-4 4m4-4 4 4" />
+  </svg>
+)
+const GlobeIcon = (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+    <circle cx="12" cy="12" r="9" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
+  </svg>
+)
+const HistoryIcon = (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v5h5M3.05 13A9 9 0 1 0 6 5.3L3 8m9-1v5l4 2" />
+  </svg>
+)
 
 export function HistoriqueDashboard() {
   const [data, setData] = useState<ApiResponse | null>(null)
@@ -88,159 +106,147 @@ export function HistoriqueDashboard() {
     { key: 'recent', label: 'Récent (7j)' },
   ]
 
-  // ── États de chargement / erreur ──────────────────────────────
-  if (loading) {
-    return (
-      <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold mb-1">Historique des diagnostics</h1>
-          <p className="text-white/50">Tous les sites analysés par PreShot.</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="card animate-pulse">
-              <div className="h-10 bg-white/5 rounded-lg mb-2" />
-              <div className="h-4 bg-white/5 rounded w-2/3 mx-auto" />
-            </div>
-          ))}
-        </div>
-        <div className="card animate-pulse h-64" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
-        <div className="card-gradient text-center py-16">
-          <p className="text-red-400 font-semibold mb-2">Impossible de charger l&apos;historique</p>
-          <p className="text-white/40 text-sm mb-6">{error}</p>
-          <button onClick={fetchDiagnostics} className="btn-primary text-sm py-2 px-4">
-            Réessayer
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ── Vue principale ────────────────────────────────────────────
   return (
-    <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-1">Historique des diagnostics</h1>
-          <p className="text-white/50">
-            20 analyses les plus récentes · score calculé sur 30 jours
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={fetchDiagnostics}
-            className="btn-outline text-sm py-2 px-3"
-            title="Actualiser"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
+    <div className="min-h-screen bg-black px-6 py-10 lg:px-12 lg:py-12">
+      <div className="mx-auto max-w-6xl">
+        {/* Header */}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-[48px]">
+              Historique de <span className="text-[#8e3ef2]">navigation</span>
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-[#c2c6d7]">
+              Suivez votre empreinte numérique : chaque destination est analysée en temps réel
+              pour garantir l&apos;intégrité de vos données, sans faille ni détour, pour votre
+              sécurité chaque jour.
+            </p>
+          </div>
+
           <button
             onClick={exportCSV}
-            className="btn-outline text-sm py-2 px-4"
             disabled={diagnostics.length === 0}
+            className="flex shrink-0 items-center gap-2 rounded-2xl border-2 border-[#682db4] bg-[#0e0e0e] px-6 py-3.5 text-sm font-semibold text-white shadow-[2px_2px_18px_rgba(104,45,180,0.45)] transition-colors hover:bg-[#682db4]/20 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Exporter CSV
+            {UploadIcon}
+            Exporter l&apos;historique
           </button>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card text-center">
-          <p className={`text-5xl font-extrabold mb-1 ${scoreColor(data!.securityScore)}`}>
-            {data!.securityScore}
-          </p>
-          <p className="text-sm text-white/50">Score de sécurité</p>
-          <p className="text-xs text-white/30 mt-1">30 derniers jours</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-3xl font-extrabold gradient-text">{data!.totalCount}</p>
-          <p className="text-sm text-white/50 mt-1">Sites analysés</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-3xl font-extrabold text-red-400">{data!.dangerCount}</p>
-          <p className="text-sm text-white/50 mt-1">Sites dangereux détectés</p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {filters.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-              filter === f.key
-                ? 'bg-violet/20 text-violet-light border border-violet/30'
-                : 'bg-white/5 text-white/50 border border-white/5 hover:border-white/10 hover:text-white'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Table */}
-      <div className="card">
-        {filtered.length === 0 ? (
-          <div className="text-center py-16 text-white/30">
-            <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <p>Aucun diagnostic trouvé.</p>
-            {diagnostics.length === 0 && (
-              <p className="text-sm mt-1">Installez l&apos;extension et naviguez pour voir vos analyses ici.</p>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left border-b border-white/5">
-                  <th className="pb-3 font-medium text-white/40">Site</th>
-                  <th className="pb-3 font-medium text-white/40">Date</th>
-                  <th className="pb-3 font-medium text-white/40">Verdict</th>
-                  <th className="pb-3 font-medium text-white/40">Red flags</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filtered.map((d) => (
-                  <tr key={d.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-4 pr-4 max-w-xs">
-                      <p className="font-medium truncate" title={d.url}>{d.url}</p>
-                    </td>
-                    <td className="py-4 pr-4 text-white/50 whitespace-nowrap">
-                      {format(new Date(d.analyzed_at), 'd MMM yyyy, HH:mm', { locale: fr })}
-                    </td>
-                    <td className="py-4 pr-4">
-                      <span className={VERDICT_BADGE[d.verdict]}>
-                        {VERDICT_LABELS[d.verdict]}
-                      </span>
-                    </td>
-                    <td className="py-4">
-                      <span className={`font-semibold ${d.red_flags_count > 0 ? 'text-amber-400' : 'text-white/30'}`}>
-                        {d.red_flags_count}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Stats + filters */}
+        {data && (
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-white/50">
+            <span>
+              Score de sécurité{' '}
+              <span className={`font-semibold ${scoreColor(data.securityScore)}`}>{data.securityScore}</span>
+            </span>
+            <span className="hidden h-3 w-px bg-white/10 sm:block" />
+            <span>
+              <span className="font-semibold text-white/80">{data.totalCount}</span> sites analysés
+            </span>
+            <span className="hidden h-3 w-px bg-white/10 sm:block" />
+            <span>
+              <span className="font-semibold text-red-400">{data.dangerCount}</span> dangereux
+            </span>
           </div>
         )}
+
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          {filters.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className={`rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+                filter === f.key
+                  ? 'border border-violet/30 bg-violet/20 text-violet-light'
+                  : 'border border-white/5 bg-white/5 text-white/50 hover:border-white/10 hover:text-white'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* List */}
+        <div className="mt-8 max-w-3xl">
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-[66px] animate-pulse rounded-[10px] border border-[#554f4f]/40 bg-[#0e0e0e]" />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="rounded-[10px] border border-[#554f4f] bg-[#0e0e0e] px-8 py-12 text-center">
+              <p className="font-semibold text-red-400">Impossible de charger l&apos;historique</p>
+              <p className="mt-1 text-sm text-white/40">{error}</p>
+              <button
+                onClick={fetchDiagnostics}
+                className="mt-5 rounded-xl border border-blue-accent/50 bg-blue-accent/10 px-5 py-2.5 text-sm font-medium text-blue-accent transition-colors hover:bg-blue-accent/20"
+              >
+                Réessayer
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-[10px] border border-[#554f4f] bg-[#0e0e0e] px-8 py-16 text-center text-white/35">
+              <p>Aucun diagnostic trouvé.</p>
+              {diagnostics.length === 0 && (
+                <p className="mt-1 text-sm">Installez l&apos;extension et naviguez pour voir vos analyses ici.</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filtered.map((d) => {
+                const flags =
+                  d.red_flags_count > 0
+                    ? `${d.red_flags_count} signal${d.red_flags_count > 1 ? 'aux' : ''} détecté${d.red_flags_count > 1 ? 's' : ''}`
+                    : 'Aucun signal'
+                return (
+                  <div
+                    key={d.id}
+                    className="flex items-center gap-6 rounded-[10px] border border-[#554f4f] bg-[#0e0e0e] px-8 py-3 transition-colors hover:border-white/30"
+                  >
+                    <span className="shrink-0 text-[#b2c5ff]">{GlobeIcon}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-[#e1e2e7]" title={d.url}>{d.url}</p>
+                      <div className="mt-1 flex items-center gap-3 text-xs">
+                        <span className="text-[#c2c6d7]">
+                          {formatDistanceToNow(new Date(d.analyzed_at), { addSuffix: true, locale: fr })}
+                        </span>
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-[rgba(140,144,160,0.5)]" />
+                        <span className="truncate text-[rgba(178,197,255,0.8)]">{flags}</span>
+                      </div>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-lg border px-3 py-1 text-[10px] font-medium uppercase tracking-[0.08em] ${VERDICT_BADGE[d.verdict]}`}
+                    >
+                      {VERDICT_LABELS[d.verdict]}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Load / refresh */}
+          {!loading && !error && (
+            <button
+              onClick={fetchDiagnostics}
+              className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-accent/40 bg-[#0e0e0e] py-5 text-sm font-semibold text-white shadow-[0_0_25px_rgba(62,116,255,0.25)] transition-colors hover:bg-blue-accent/10"
+            >
+              {HistoryIcon}
+              Charger l&apos;historique complet
+            </button>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-white/5 pt-6 text-xs text-[#8c90a0] sm:flex-row sm:items-center">
+          <p className="opacity-80">© 2026 Preshot. Tous droits réservés.</p>
+          <div className="flex items-center gap-7 uppercase tracking-[0.1em]">
+            <a href="#" className="transition-colors hover:text-white">Confidentialité</a>
+            <a href="#" className="transition-colors hover:text-white">CGU</a>
+            <a href="#" className="transition-colors hover:text-white">Contact</a>
+          </div>
+        </div>
       </div>
     </div>
   )
