@@ -81,6 +81,29 @@ const features: Feature[] = [
   },
 ]
 
+/** Shared gradient background (color blobs + vertical glass sheen), reused on
+ *  both faces so the back shows the same design through its padding frame. */
+function CardBackground() {
+  return (
+    <>
+      {/* color blobs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -left-10 bottom-0 h-52 w-52 rounded-full bg-violet/50 blur-3xl" />
+        <div className="absolute right-0 top-0 h-60 w-60 rounded-full bg-blue-accent/40 blur-3xl" />
+        <div className="absolute right-6 bottom-10 h-48 w-48 rounded-full bg-violet-light/40 blur-3xl" />
+      </div>
+      {/* vertical glass sheen (slats of 86.5px, like Figma) */}
+      <div
+        className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-70"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0px, rgba(0,0,0,0.3) 65.8px, rgba(255,255,255,0.3) 86.5px)',
+        }}
+      />
+    </>
+  )
+}
+
 function Card({ feature }: { feature: Feature }) {
   const [flipped, setFlipped] = useState(false)
 
@@ -94,20 +117,7 @@ function Card({ feature }: { feature: Feature }) {
       <div className="flip-inner">
         {/* Front */}
         <div className="flip-face bg-black">
-          {/* color blobs */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -left-10 bottom-0 h-52 w-52 rounded-full bg-violet/50 blur-3xl" />
-            <div className="absolute right-0 top-0 h-60 w-60 rounded-full bg-blue-accent/40 blur-3xl" />
-            <div className="absolute right-6 bottom-10 h-48 w-48 rounded-full bg-violet-light/40 blur-3xl" />
-          </div>
-          {/* vertical glass sheen (slats of 86.5px, like Figma) */}
-          <div
-            className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-70"
-            style={{
-              backgroundImage:
-                'repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0px, rgba(0,0,0,0.3) 65.8px, rgba(255,255,255,0.3) 86.5px)',
-            }}
-          />
+          <CardBackground />
 
           <div className="relative z-10 flex h-full flex-col items-center justify-center gap-12 px-6 text-center">
             {feature.selfContained ? (
@@ -125,15 +135,20 @@ function Card({ feature }: { feature: Feature }) {
           </div>
         </div>
 
-        {/* Back (white, padded, with explanation) */}
-        <div className="flip-face flip-back bg-white text-black">
-          <div className="flex h-full flex-col p-8">
-            <h3 className="text-center text-2xl font-semibold leading-tight tracking-tight">
-              {feature.backTitle}
-            </h3>
-            <p className="mt-auto text-base font-medium leading-relaxed">
-              {feature.description}
-            </p>
+        {/* Back: same gradient design as the front, with a white inner panel
+            inset by padding (25/33px like Figma) so the design frames it. */}
+        <div className="flip-face flip-back bg-black">
+          <CardBackground />
+
+          <div className="relative z-10 flex h-full items-stretch px-[25px] py-[33px]">
+            <div className="flex w-full flex-col overflow-hidden rounded-[20px] bg-white px-6 pb-12 pt-12 text-black">
+              <h3 className="text-center text-2xl font-semibold leading-tight tracking-tight">
+                {feature.backTitle}
+              </h3>
+              <p className="mt-auto text-base font-medium leading-relaxed">
+                {feature.description}
+              </p>
+            </div>
           </div>
         </div>
       </div>
