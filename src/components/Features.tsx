@@ -1,85 +1,176 @@
-const features = [
+'use client'
+
+import { useState, type ReactNode } from 'react'
+
+type Feature = {
+  title: ReactNode
+  /** Title shown on the white back face. */
+  backTitle: ReactNode
+  description: string
+  /** Icon path (in /public/icons). */
+  icon: string
+  /** Set when the SVG already includes its own badge (square + border). */
+  selfContained?: boolean
+}
+
+const features: Feature[] = [
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    title: 'Programme de parrainage',
+    title: 'Parrainage',
+    backTitle: 'Parrainage',
     description:
-      'Invitez vos proches et gagnez des mois Pro à chaque parrainage validé. Plus vous parrainez, plus vous êtes récompensé — jusqu\'au badge Fondateur.',
-    gradient: 'from-violet/20 to-violet/5',
-    border: 'border-violet/20',
+      "Invitez vos amis et vos proches grâce à un lien d'invitation pour créer une communauté et les inviter à se renseigner avant d'acheter.",
+    icon: '/icons/parrainage.svg',
+    selfContained: true,
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
+    title: (
+      <>
+        Newsletter
+        <br />
+        mensuelle
+      </>
     ),
-    title: 'Newsletter & alertes',
+    backTitle: (
+      <>
+        Newsletter
+        <br />
+        mensuelle
+      </>
+    ),
     description:
-      'Restez informé des nouvelles menaces, arnaques virales et dark patterns détectés. Une veille hebdomadaire pour vous garder en sécurité.',
-    gradient: 'from-blue-accent/20 to-blue-accent/5',
-    border: 'border-blue-accent/20',
+      "Recevez une newsletter chaque mois avec un résumé de votre utilisation de Preshot ainsi que les dernières avancées en termes de vérification de sites web.",
+    icon: '/icons/newsletter.svg',
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
+    title: (
+      <>
+        Historique
+        <br />
+        de vérification
+      </>
     ),
-    title: 'Historique des diagnostics',
+    backTitle: (
+      <>
+        Historique
+        <br />
+        des vérifications
+      </>
+    ),
     description:
-      'Retrouvez l\'intégralité de vos analyses passées. Score de sécurité global, filtres par verdict et export CSV pour un suivi complet.',
-    gradient: 'from-emerald-500/20 to-emerald-500/5',
-    border: 'border-emerald-500/20',
+      "Avec notre offre premium, gardez une trace de la vérification de tous les sites sur lesquels vous avez effectué un paiement. Plus besoin d'un diagnostic sur les sites déjà visités !",
+    icon: '/icons/historique.svg',
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
+    title: (
+      <>
+        Détection de
+        <br />
+        dark patterns
+      </>
     ),
-    title: 'Détection dark patterns',
+    backTitle: (
+      <>
+        Détection des
+        <br />
+        dark patterns
+      </>
+    ),
     description:
-      'Identifiez les interfaces trompeuses : faux compteurs d\'urgence, abonnements cachés, boutons piège, checkboxes pré-cochées et bien plus.',
-    gradient: 'from-amber-500/20 to-amber-500/5',
-    border: 'border-amber-500/20',
+      "Notre outil analyse le contenu d'une page à la recherche d'interfaces ou d'éléments manipulateurs et vous en informe le cas échéant.",
+    icon: '/icons/dark-patterns.svg',
   },
 ]
 
-export function Features() {
+/** Shared gradient background (color blobs + vertical glass sheen), reused on
+ *  both faces so the back shows the same design through its padding frame. */
+function CardBackground() {
   return (
-    <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Section header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 text-sm font-medium mb-6">
-            Fonctionnalités
+    <>
+      {/* color blobs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -left-10 bottom-0 h-52 w-52 rounded-full bg-violet/50 blur-3xl" />
+        <div className="absolute right-0 top-0 h-60 w-60 rounded-full bg-blue-accent/40 blur-3xl" />
+        <div className="absolute right-6 bottom-10 h-48 w-48 rounded-full bg-violet-light/40 blur-3xl" />
+      </div>
+      {/* vertical glass sheen (slats of 86.5px, like Figma) */}
+      <div
+        className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-70"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0px, rgba(0,0,0,0.3) 65.8px, rgba(255,255,255,0.3) 86.5px)',
+        }}
+      />
+    </>
+  )
+}
+
+function Card({ feature }: { feature: Feature }) {
+  const [flipped, setFlipped] = useState(false)
+
+  return (
+    <button
+      type="button"
+      aria-pressed={flipped}
+      onClick={() => setFlipped((f) => !f)}
+      className={`flip-card h-[468px] w-[346px] cursor-pointer text-left ${flipped ? 'is-flipped' : ''}`}
+    >
+      <div className="flip-inner">
+        {/* Front */}
+        <div className="flip-face bg-black">
+          <CardBackground />
+
+          <div className="relative z-10 flex h-full flex-col items-center justify-center gap-12 px-6 text-center">
+            {feature.selfContained ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={feature.icon} alt="" className="h-[100px] w-[100px]" />
+            ) : (
+              <div className="flex h-[100px] w-[100px] items-center justify-center rounded-[20px] border border-white bg-icon-bg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={feature.icon} alt="" className="h-[60px] w-[60px]" />
+              </div>
+            )}
+            <h3 className="text-3xl font-semibold leading-tight tracking-tight text-white">
+              {feature.title}
+            </h3>
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            Tout ce qu&apos;il vous faut pour{' '}
-            <span className="gradient-text">naviguer serein</span>
-          </h2>
-          <p className="text-white/50 text-lg max-w-2xl mx-auto">
-            Une suite complète d&apos;outils pensée pour vous protéger à chaque étape de votre navigation.
-          </p>
         </div>
 
-        {/* Feature grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {features.map((f, i) => (
-            <div
-              key={i}
-              className={`rounded-2xl border ${f.border} bg-gradient-to-br ${f.gradient} p-8 group hover:scale-[1.02] transition-transform duration-300`}
-            >
-              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-6 text-white group-hover:bg-white/15 transition-colors">
-                {f.icon}
-              </div>
-              <h3 className="text-xl font-semibold mb-3">{f.title}</h3>
-              <p className="text-white/55 leading-relaxed">{f.description}</p>
+        {/* Back: same gradient design as the front, with a white inner panel
+            inset by padding (25/33px like Figma) so the design frames it. */}
+        <div className="flip-face flip-back bg-black">
+          <CardBackground />
+
+          <div className="relative z-10 flex h-full items-stretch px-[25px] py-[33px]">
+            <div className="flex w-full flex-col overflow-hidden rounded-[20px] bg-white px-6 pb-12 pt-12 text-black">
+              <h3 className="text-center text-2xl font-semibold leading-tight tracking-tight">
+                {feature.backTitle}
+              </h3>
+              <p className="mt-auto text-base font-medium leading-relaxed">
+                {feature.description}
+              </p>
             </div>
+          </div>
+        </div>
+      </div>
+    </button>
+  )
+}
+
+export function Features() {
+  return (
+    <section id="features" className="py-24 px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl">
+        {/* Section title */}
+        <h2 className="mb-16 text-4xl font-medium leading-tight tracking-tight sm:text-5xl">
+          Un ensemble de fonctionnalité
+          <br />
+          <span className="text-white/70">pour une navigation simplifiée</span>
+        </h2>
+
+        {/* Cards */}
+        <div className="grid grid-cols-1 justify-items-center gap-8 sm:grid-cols-2">
+          {features.map((f, i) => (
+            <Card key={i} feature={f} />
           ))}
         </div>
       </div>

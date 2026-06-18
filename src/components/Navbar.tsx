@@ -5,41 +5,45 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useSession, signIn, signOut } from 'next-auth/react'
 
+const links = [
+  { href: '/', label: 'Accueil' },
+  { href: '/#features', label: 'À propos' },
+  { href: '/#pricing', label: 'Nos offres' },
+]
+
 export function Navbar() {
   const { data: session } = useSession()
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-md">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="fixed top-0 inset-x-0 z-50 bg-black/80 backdrop-blur-md">
+      <nav className="max-w-[1280px] mx-auto px-6 lg:px-10 h-[80px] flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-hero flex items-center justify-center font-bold text-sm shadow-lg shadow-violet/40">
-            P
-          </div>
-          <span className="font-bold text-lg tracking-tight">
-            Pre<span className="gradient-text">Shot</span>
-          </span>
+        <Link href="/" className="text-2xl sm:text-[30px] font-semibold tracking-tight">
+          Preshot
         </Link>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8">
-          <Link href="/" className="text-sm text-white/70 hover:text-white transition-colors">
-            Accueil
-          </Link>
-          <Link href="/#features" className="text-sm text-white/70 hover:text-white transition-colors">
-            À propos
-          </Link>
-          <Link href="/#pricing" className="text-sm text-white/70 hover:text-white transition-colors">
-            Nos offres
-          </Link>
+        <div className="hidden md:flex items-center gap-9">
+          {links.map((l) => (
+            <Link
+              key={l.label}
+              href={l.href}
+              className="text-base text-white/90 hover:text-white transition-colors"
+            >
+              {l.label}
+            </Link>
+          ))}
         </div>
 
         {/* CTA */}
         <div className="hidden md:flex items-center gap-3">
           {session ? (
             <div className="flex items-center gap-3">
-              <Link href="/dashboard/profil" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <Link
+                href="/dashboard/profil"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
                 {session.user.image ? (
                   <Image
                     src={session.user.image}
@@ -55,40 +59,24 @@ export function Navbar() {
                 )}
                 <span className="text-sm text-white/80">{session.user.name?.split(' ')[0]}</span>
               </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="btn-outline text-sm py-2 px-4"
-              >
+              <button onClick={() => signOut({ callbackUrl: '/' })} className="btn-pill">
                 Déconnexion
               </button>
             </div>
           ) : (
-            <>
-              <button
-                onClick={() => signIn('google')}
-                className="btn-outline text-sm py-2 px-4"
-              >
-                Connexion
-              </button>
-              <a
-                href="https://chrome.google.com/webstore"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary text-sm py-2 px-4"
-              >
-                Télécharger
-              </a>
-            </>
+            <button onClick={() => signIn('google')} className="btn-pill">
+              Se connecter
+            </button>
           )}
         </div>
 
-        {/* Mobile menu toggle */}
+        {/* Mobile toggle */}
         <button
-          className="md:hidden text-white/70 hover:text-white"
+          className="md:hidden text-white/80 hover:text-white"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Menu"
         >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             {menuOpen ? (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             ) : (
@@ -100,18 +88,26 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-white/5 bg-background/95 px-4 py-4 flex flex-col gap-4">
-          <Link href="/" className="text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>Accueil</Link>
-          <Link href="/#features" className="text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>À propos</Link>
-          <Link href="/#pricing" className="text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>Nos offres</Link>
-          <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+        <div className="md:hidden border-t border-white/10 bg-black/95 px-6 py-4 flex flex-col gap-4">
+          {links.map((l) => (
+            <Link
+              key={l.label}
+              href={l.href}
+              className="text-base text-white/80 hover:text-white"
+              onClick={() => setMenuOpen(false)}
+            >
+              {l.label}
+            </Link>
+          ))}
+          <div className="pt-2 border-t border-white/10">
             {session ? (
-              <button onClick={() => signOut({ callbackUrl: '/' })} className="btn-outline text-sm">Déconnexion</button>
+              <button onClick={() => signOut({ callbackUrl: '/' })} className="btn-pill w-full">
+                Déconnexion
+              </button>
             ) : (
-              <>
-                <button onClick={() => signIn('google')} className="btn-outline text-sm">Connexion</button>
-                <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer" className="btn-primary text-sm text-center">Télécharger</a>
-              </>
+              <button onClick={() => signIn('google')} className="btn-pill w-full">
+                Se connecter
+              </button>
             )}
           </div>
         </div>
